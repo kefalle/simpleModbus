@@ -1,6 +1,6 @@
 module simpleModbus
 
-go 1.21.3
+go 1.19.8
 
 require (
 	github.com/VictoriaMetrics/metrics v1.24.0
