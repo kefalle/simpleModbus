@@ -36,7 +36,7 @@ func Tasks() {
 		maxS := 2 * radius * radius
 		res := s <= maxS
 
-		log.Printf("task3: r=%f s=%f is %b", r, s, res)
+		log.Printf("task3: r=%f s=%f is %t", r, s, res)
 
 		return res
 	}
