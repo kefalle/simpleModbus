@@ -8,7 +8,7 @@ scrape_configs:
     labels:
       instance: rpi2
   - job_name: simpleModbus
-    scrape_interval: 1m
+    scrape_interval: 30s
     metrics_path: "/metrics"
     static_configs:
       - targets:

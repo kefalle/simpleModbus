@@ -1,0 +1,18 @@
+# /usr/local/lib/systemd/system/simpleModbus.service
+[Unit]
+Description=modbus2prometheus
+After=network.target
+
+[Service]
+Type=simple
+User=root
+PermissionsStartOnly=true
+ExecStartPre=/usr/bin/install -m 755 -d /opt/simpleModbus/ -o root -g root
+Environment=GOMAXPROCS=1
+ExecStart=/opt/simpleModbus/simpleModbus
+Restart=always
+StartLimitBurst=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
