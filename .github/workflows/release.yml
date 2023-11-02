@@ -19,6 +19,9 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.19.8'
+
+      - name: Make dest
+        run: mkdir ./dest
   
       - name: Build for arm
         run: GOOS="linux" GOARCH="arm" go build -v ./... -o ./dest/simpleModbus
