@@ -1,6 +1,9 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"github.com/mcuadros/go-defaults"
 	"log"
 	"net/http"
 	"os"
@@ -8,44 +11,35 @@ import (
 )
 
 const APP = "simpleModbus"
-const VERSION = "0.0.1"
+const VERSION = "0.0.2"
 
-func defaultFloat32Action(val interface{}, t *controller.Tag) {
-	if t.LastValue != val {
-		v := val.(float32)
-		log.Printf("%s = %f", t.Name, v)
-		t.LastValue = val
-	}
-}
+var (
+	httpListenAddr = flag.String("httpListenAddr", ":3000", "TCP address to listen for http connections.")
+	modbusTcpAddr  = flag.String("modbusTcpAddr", "rtuovertcp://192.168.1.200:8899", "TCP address to modbus device with RTU over TCP.")
+	config         = flag.String("config", "./config.yaml", "Modbus controller configuration")
 
-func defaultUint16Action(val interface{}, t *controller.Tag) {
-	if t.LastValue != val {
-		v := val.(uint16)
-		log.Printf("%s = %d", t.Name, v)
-		t.LastValue = val
-	}
-}
+	ControllerConfig *Config
+)
 
 // Инициализация модбас контроллера
 func initController() (ctrl *controller.Controller, err error) {
+	log.Println("Configuring modbus controller " + *modbusTcpAddr)
 	ctrl, err = controller.New(&controller.Configuration{
-		Url: "rtuovertcp://192.168.1.200:8899",
+		Url:         ControllerConfig.DeviceUrl,
+		DeviceId:    ControllerConfig.DeviceId,
+		Speed:       ControllerConfig.Speed,
+		Timeout:     ControllerConfig.Timeout,
+		PollingTime: ControllerConfig.PollingTime,
+		ReadPeriod:  ControllerConfig.ReadPeriod,
 	})
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(1)
 	}
 
-	// Эти регистры как в контроллере +1
-	ctrl.AddTag(&controller.Tag{Name: "temp_floor", Address: 513, Method: controller.READ_FLOAT, Action: defaultFloat32Action})
-	ctrl.AddTag(&controller.Tag{Name: "temp_otopl", Address: 515, Method: controller.READ_FLOAT, Action: defaultFloat32Action})
-	ctrl.AddTag(&controller.Tag{Name: "temp_boiler", Address: 517, Method: controller.READ_FLOAT, Action: defaultFloat32Action})
-	ctrl.AddTag(&controller.Tag{Name: "temp_inout", Address: 519, Method: controller.READ_FLOAT, Action: defaultFloat32Action})
-
-	// Регистры как в контроллере
-	ctrl.AddTag(&controller.Tag{Name: "status", Address: 520, Method: controller.READ_UINT, Action: defaultUint16Action})
-	ctrl.AddTag(&controller.Tag{Name: "servo_otopl", Address: 521, Method: controller.READ_UINT, Action: defaultUint16Action})
-	ctrl.AddTag(&controller.Tag{Name: "servo_floor", Address: 550, Method: controller.READ_UINT, Action: defaultUint16Action})
+	for _, tag := range ControllerConfig.Tags {
+		ctrl.AddTag(&controller.Tag{Name: tag.Name, DisplayName: tag.Desc, Address: tag.Address, Method: controller.ParseOperation(tag.Operation)})
+	}
 
 	return
 }
@@ -59,13 +53,43 @@ func initHttpServer(ctrl *controller.Controller) *http.ServeMux {
 	return mux
 }
 
+func ParseFlags() {
+	flag.CommandLine.SetOutput(os.Stdout)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `%s %s
+Usage: %s [options]
+
+`, APP, VERSION, APP)
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	err := ValidateConfigPath(*config)
+	if err != nil {
+		log.Println("Cannot find config: " + err.Error())
+		os.Exit(1)
+	}
+
+	ControllerConfig, err = NewConfig(*config)
+	if err != nil {
+		log.Println("Cannot parse config" + err.Error())
+		os.Exit(1)
+	}
+
+	defaults.SetDefaults(ControllerConfig)
+	if len(ControllerConfig.DeviceUrl) == 0 {
+		ControllerConfig.DeviceUrl = *modbusTcpAddr
+	}
+}
+
 func main() {
+	ParseFlags()
 	log.Println("Starting...")
 
 	// Инициализация модбас конроллера
 	ctrl, err := initController()
 	if err != nil {
-		log.Println("Can not listen http")
+		log.Println("Can not init modbus device: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -75,10 +99,10 @@ func main() {
 
 	// Инициализация сервера
 	mux := initHttpServer(ctrl)
-	log.Println("Listening...")
-	err = http.ListenAndServe(":3000", mux)
+	log.Println("Listening " + *httpListenAddr + " ...")
+	err = http.ListenAndServe(*httpListenAddr, mux)
 	if err != nil {
-		log.Println("Can not listen http")
+		log.Println("Can not listen http: " + err.Error())
 		os.Exit(1)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/simonvetter/modbus"
 	"log"
 	"net"
+	"os"
 	"sync"
 	"time"
 )
@@ -47,6 +48,35 @@ type Controller struct {
 	// metrics
 	errCounter *metrics.Counter
 	reqCounter *metrics.Counter
+}
+
+func defaultFloat32Action(val interface{}, t *Tag) {
+	if t.LastValue != val {
+		v := val.(float32)
+		log.Printf("%s = %f", t.Name, v)
+		t.LastValue = val
+	}
+}
+
+func defaultUint16Action(val interface{}, t *Tag) {
+	if t.LastValue != val {
+		v := val.(uint16)
+		log.Printf("%s = %d", t.Name, v)
+		t.LastValue = val
+	}
+}
+
+func ParseOperation(op string) (t OperationType) {
+	if op == "read_uint" {
+		return READ_UINT
+	} else if op == "read_float" {
+		return READ_FLOAT
+	}
+
+	log.Println("Unsupported operation " + op + " must be read_uint, read_float")
+	os.Exit(1)
+
+	return 0
 }
 
 func New(conf *Configuration) (c *Controller, err error) {
@@ -97,6 +127,15 @@ func (c *Controller) AddTag(tag *Tag) {
 		}
 		return 0.0
 	})
+
+	if tag.Action == nil {
+		switch tag.Method {
+		case READ_UINT:
+			tag.Action = defaultUint16Action
+		case READ_FLOAT:
+			tag.Action = defaultFloat32Action
+		}
+	}
 
 	c.tags = append(c.tags, tag)
 }
