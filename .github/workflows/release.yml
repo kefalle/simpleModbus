@@ -1,0 +1,37 @@
+# workflow name
+name: Generate release-artifacts
+
+# on events
+on:
+  release:
+    types: 
+        - created
+
+# workflow tasks
+jobs:
+  build_release:
+      name: Generate cross-platform release
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v3
+  
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19.8'
+  
+      - name: Build for arm
+        run: GOOS="linux" GOARCH="arm" go build -v ./... -o ./dest/simpleModbus
+
+      - name: Gzip for arm
+        run: tar -zcvf ./dest/simpleModbus ./dest/simpleModbus-linux-arm.tar.gz
+
+      - name: upload windows artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dest/simpleModbus-linux-amd.tar.gz
+          asset_name: simpleModbus-linux-amd.tar.gz
+          asset_content_type: application/zip
