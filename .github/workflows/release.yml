@@ -24,7 +24,7 @@ jobs:
         run: GOOS="linux" GOARCH="arm" go build -v ./...
 
       - name: Gzip for arm
-        run: tar -zcvf ./simpleModbus ./simpleModbus-linux-arm.tar.gz
+        run: tar -zcvf ./simpleModbus-linux-arm.tar.gz ./simpleModbus 
 
       - name: upload windows artifact
         uses: actions/upload-release-asset@v1
