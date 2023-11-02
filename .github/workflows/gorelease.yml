@@ -19,7 +19,6 @@ jobs:
         uses: thatisuday/go-cross-build@v1
         with:
             platforms: 'linux/amd64, darwin/amd64, linux/arm'
-            package: ''
             name: 'simpleModbus'
             compress: 'true'
             dest: 'dist'
