@@ -19,15 +19,12 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.19.8'
-
-      - name: Make dest
-        run: mkdir ./dest
   
       - name: Build for arm
-        run: GOOS="linux" GOARCH="arm" go build -v ./... -o ./dest/simpleModbus
+        run: GOOS="linux" GOARCH="arm" go build -v ./...
 
       - name: Gzip for arm
-        run: tar -zcvf ./dest/simpleModbus ./dest/simpleModbus-linux-arm.tar.gz
+        run: tar -zcvf ./simpleModbus ./simpleModbus-linux-arm.tar.gz
 
       - name: upload windows artifact
         uses: actions/upload-release-asset@v1
@@ -35,6 +32,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dest/simpleModbus-linux-amd.tar.gz
+          asset_path: ./simpleModbus-linux-amd.tar.gz
           asset_name: simpleModbus-linux-amd.tar.gz
           asset_content_type: application/zip
