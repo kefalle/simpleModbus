@@ -21,7 +21,7 @@ jobs:
           go-version: '1.19.8'
   
       - name: Build for arm
-        run: GOOS="linux" GOARCH="arm" go build -v ./...
+        run: GOOS="linux" GOARCH="arm" go build
 
       - name: Gzip for arm
         run: tar -zcvf ./simpleModbus-linux-arm.tar.gz ./simpleModbus 
