@@ -14,6 +14,12 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       - uses: actions/checkout@v3
+
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
   
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -31,7 +37,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: ./simpleModbus-linux-amd.tar.gz
           asset_name: simpleModbus-linux-amd.tar.gz
           asset_content_type: application/zip
