@@ -9,7 +9,7 @@ User=root
 PermissionsStartOnly=true
 ExecStartPre=/usr/bin/install -m 755 -d /opt/simpleModbus/ -o root -g root
 Environment=GOMAXPROCS=1
-ExecStart=/opt/simpleModbus/simpleModbus
+ExecStart=/opt/simpleModbus/simpleModbus -config /etc/simpleModbus.config.yaml
 Restart=always
 StartLimitBurst=5
 LimitNOFILE=65536

@@ -200,12 +200,10 @@ func (c *Controller) Poll() {
 				if cause, ok := err.(interface{ Unwrap() error }); ok {
 					if _, ok := cause.(net.Error); ok {
 						needRestart = true
-						c.Unlock()
-						break
 					}
 				}
 				c.Unlock()
-				continue
+				break
 			}
 			tag.Action(val, c.tags[i])
 			c.Unlock()

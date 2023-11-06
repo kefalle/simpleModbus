@@ -20,10 +20,10 @@ tags:
   - name: "status"
     address: 520
     operation: "read_uint"
-  - name: "servo_otopl"
+  - name: "servo_floor"
     address: 521
     operation: "read_uint"
-  - name: "servo_floor"
+  - name: "servo_otopl"
     address: 522
     operation: "read_uint"
   - name: "t_otopl_ust"
